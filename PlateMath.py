@@ -1,6 +1,11 @@
 from PlateConstants import PLATE_WEIGHTS
 
+
 class PlateMath:
+    '''
+    PlateMath: A mock class to demonstrate plate calculation logic
+    ***Not used by the Alexa Service, see abstracted functions below for Alexa logic
+    '''
 
     def __init__(self, unit='lb', bar_weight=None):
 
@@ -64,3 +69,38 @@ class PlateMath:
                 return {plate_weight: weight//(2*plate_weight), **self.rec_plate(weight%(2*plate_weight))}
 
         return {}
+
+'''
+    The following functions have been simplified and are actually used by the Alexa service
+'''
+
+PLATE_WEIGHTS_MAP = {
+    'pounds': set([45, 35, 25, 10, 5, 2.5]),
+    'kilograms': set([20, 15, 10, 5, 2, 1])
+}
+def calc_plates(self, weight, bar_weight=45, unit='pounds'):
+
+    if unit not in PLATE_WEIGHTS_MAP:
+        raise ValueError('Not a valid unit!')
+
+    plate_weights = sorted(PLATE_WEIGHTS_MAP[unit], reverse=True)
+
+    if weight < bar_weight:
+        return (False, f'{weight} {unit} is less than your bar weight of {bar_weight} {unit}')
+
+    resolution = (2 * min(plate_weights))
+    if weight % resolution:
+
+        bot_range = resolution * (weight//resolution)
+        top_range = bot_range + resolution
+
+        return (False, f"I can't make {weight} {unit} with the available plate weights. I can make {top_range}" \
+                f" {unit} or {bot_range} {unit} though! Which would you like?")
+
+    for plate_weight in calc_plates:
+
+        if weight >= 2*plate_weight:
+
+            return {plate_weight: weight//(2*plate_weight), **self.rec_plate(weight%(2*plate_weight))}
+
+    return {}
